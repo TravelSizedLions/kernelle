@@ -1,0 +1,54 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: rust-${{ hashFiles('Cargo.lock', 'ops.lock') }}
+          restore-keys: |
+            rust-
+      - run: shell/.ops/init --no-install
+      - run: shell/action rust setup stable rustfmt clippy
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: rust-${{ hashFiles('Cargo.lock', 'ops.lock') }}
+          restore-keys: |
+            rust-
+      - run: shell/.ops/init --no-install
+      - run: shell/action rust setup
+      - run: cargo test

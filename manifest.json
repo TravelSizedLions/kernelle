@@ -1,0 +1,15 @@
+{
+  "name": "blizz",
+  "command-name": "blizz",
+  "description": "Animated terminal setup wizard with mascot, decode effects, and prompt primitives",
+  "org": "kernelle-soft",
+  "repo": "blizz",
+  "linear-team": "BLIZZ",
+  "latest": "0.1.0",
+  "stable": "0.1.0",
+  "releases": 0,
+  "naming": {
+    "major": "",
+    "minor": ""
+  }
+}

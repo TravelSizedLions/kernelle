@@ -1,0 +1,122 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+          - dev
+          - alpha
+          - beta
+          - rc
+          - release
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: rust-${{ hashFiles('Cargo.lock', 'ops.lock') }}
+          restore-keys: |
+            rust-
+      - run: shell/.ops/init --no-install
+      - run: shell/action rust setup stable rustfmt clippy
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: rust-${{ hashFiles('Cargo.lock', 'ops.lock') }}
+          restore-keys: |
+            rust-
+      - run: shell/.ops/init --no-install
+      - run: shell/action rust setup
+      - run: cargo test
+
+  publish:
+    needs: [lint, test]
+    runs-on: ubuntu-22.04
+    env:
+      FORGE_ADMIN_TOKEN: ${{ secrets.BLIZZ_TOKEN }}
+      LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: rust-${{ hashFiles('Cargo.lock', 'ops.lock') }}
+          restore-keys: |
+            rust-
+      - run: shell/.ops/init --no-install
+      - run: shell/action rust setup
+      - run: shell/action git config "Blizz" "blizz@kernelle-soft.com"
+      - run: shell/action git auth "blizz" "${{ secrets.BLIZZ_TOKEN }}"
+      - run: shell/action forgejo sync-labels
+      - name: bump-version
+        run: |
+          VERSION=$(shell/ops git-bump --dry-run) || { echo "No bump needed, skipping release."; exit 0; }
+          shell/action git version-guard "v${VERSION}" || exit 0
+          echo "$VERSION" > .version
+
+          shell/ops sync-manifest "$VERSION"
+          shell/action rust sync-cargo-version "$VERSION"
+          shell/ops git-commit -a -m "chore: bump to v${VERSION} [skip ci]"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+      - name: push-version
+        run: |
+          [ -f .version ] || { echo 'No bump performed, skipping push.'; exit 0; }
+          VERSION=$(cat .version)
+          git push origin main "v${VERSION}"
+      - name: publish-crate
+        run: |
+          [ -f .version ] || { echo 'No bump performed, skipping publish.'; exit 0; }
+          cargo publish --allow-dirty
+      - run: shell/action linear close-mentioned-issues

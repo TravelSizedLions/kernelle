@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Bootstrap shellops if envrc is not already loaded.
+if [[ -z "${SHELLOPS_DIR:-}" ]]; then
+  # shellcheck disable=SC2155
+  export SHELLOPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.ops" && pwd)"
+  source "$SHELLOPS_DIR/.envrc"
+fi
+
+subcommand="${1:-}"
+if [[ -z "$subcommand" ]]; then
+  echo "Usage: ops <command> [args...]" >&2
+  echo "" >&2
+  echo "Commands:" >&2
+  for cmd in "$SHELLOPS_DIR"/cli/*; do
+    [[ -x "$cmd" ]] && echo "  $(basename "$cmd")" >&2
+  done
+  exit 1
+fi
+shift
+
+cli_script="$SHELLOPS_DIR/cli/$subcommand"
+if [[ ! -f "$cli_script" ]]; then
+  echo "ops: unknown command '$subcommand'" >&2
+  exit 1
+fi
+
+exec "$cli_script" "$@"

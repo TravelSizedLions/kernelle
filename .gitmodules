@@ -1,0 +1,3 @@
+[submodule "shell/.ops"]
+	path = shell/.ops
+	url = https://creature-workshop.kernelle-soft.com/kernelle-soft/shellops.git

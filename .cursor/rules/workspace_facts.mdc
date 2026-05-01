@@ -1,0 +1,18 @@
+---
+description: Workspace facts for the blizz crate
+globs:
+alwaysApply: true
+---
+# Workspace Facts
+
+## Linear MCP Integration
+
+`BLIZZ` is the Linear ticket prefix for this project (team: Blizz, org: grand-cluster-city).
+
+2-way issue sync is enabled between Linear and GitHub. When referencing tickets in PR comments or other GitHub contexts, link to the GitHub issue (e.g. `#1`) rather than the Linear URL so the sync stays useful in both directions.
+
+## About This Crate
+
+`blizz` is a reusable Rust crate providing an animated terminal setup wizard for Kernelle Software CLI tools. It features a bobbing mascot, character-by-character decode text effects, and centered prompt primitives, all driven by an event-driven render loop via crossterm.
+
+Licensed under PolyForm Noncommercial 1.0.0. Do not publish to crates.io without verifying the license-file field is set correctly.

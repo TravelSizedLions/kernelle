@@ -1,0 +1,5 @@
+{
+  "system": {
+    "shellcheck": { "version": "0.9.0" }
+  }
+}

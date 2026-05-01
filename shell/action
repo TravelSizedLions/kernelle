@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Bootstrap shellops if envrc is not already loaded.
+if [[ -z "${SHELLOPS_DIR:-}" ]]; then
+  # shellcheck disable=SC2155
+  _self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -d "$_self_dir/.ops" ]]; then
+    export SHELLOPS_DIR="$_self_dir/.ops"
+  else
+    export SHELLOPS_DIR="$_self_dir"
+  fi
+  source "$SHELLOPS_DIR/.envrc"
+fi
+
+ACTIONS_DIR="$SHELLOPS_DIR/actions"
+
+list_commands() {
+  local dir="$1" prefix="${2:-}"
+
+  for entry in "$dir"/*; do
+    if [[ ! -e "$entry" ]]; then
+      continue
+    fi
+
+    local name
+    name="$(basename "$entry")"
+
+    if [[ -d "$entry" ]]; then
+      list_commands "$entry" "${prefix}${name} "
+    elif [[ -x "$entry" ]]; then
+      echo "  ${prefix}${name}" >&2
+    fi
+  done
+}
+
+show_usage() {
+  local label="$1" dir="$2"
+  echo "Usage: action ${label}<command> [args...]" >&2
+  echo "" >&2
+  echo "Commands:" >&2
+  list_commands "$dir" "$label"
+  exit 1
+}
+
+if [[ $# -eq 0 ]]; then
+  show_usage "" "$ACTIONS_DIR"
+fi
+
+action_path="$ACTIONS_DIR"
+breadcrumb=()
+
+while [[ $# -gt 0 ]]; do
+  candidate="$action_path/$1"
+
+  if [[ -f "$candidate" && -x "$candidate" ]]; then
+    shift
+    exec "$candidate" "$@"
+  elif [[ -d "$candidate" ]]; then
+    breadcrumb+=("$1")
+    action_path="$candidate"
+    shift
+  else
+    echo "action: unknown command '${breadcrumb[*]:+${breadcrumb[*]} }$1'" >&2
+    exit 1
+  fi
+done
+
+show_usage "${breadcrumb[*]} " "$action_path"

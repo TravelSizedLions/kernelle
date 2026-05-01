@@ -1,46 +1,13 @@
-[workspace]
-resolver = "2"
-members = [
-    "crates/bentley", 
-    "crates/insights",
-    "crates/blizz",
-    "crates/secrets",
-    "crates/violet"
-]
+[package]
+name = "blizz"
+version = "0.1.0"
+edition = "2024"
+description = "Animated terminal setup wizard with mascot, decode effects, and prompt primitives"
+license-file = "LICENSE"
+repository = "https://creature-workshop.kernelle-soft.com/kernelle-soft/blizz"
+keywords = ["tui", "wizard", "animation", "setup"]
+categories = ["command-line-interface"]
 
-[workspace.package]
-version = "0.11.4"
-edition = "2021"
-authors = ["Voxel <travelsizedlions@gmail.com>"]
-license = "Private"
-repository = "https://github.com/kernelle-soft/blizz"
-
-[workspace.metadata]
-updates_api_base = "https://api.github.com/repos/kernelle-soft/blizz"
-
-[workspace.dependencies]
-bentley = { path = "crates/bentley" }
-reqwest = { version = "0.12.23", features = ["json", "rustls-tls"] }
-clap = { version = "4.5", features = ["derive", "env"] }
-tokio = { version = "1.47", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-anyhow = "1.0"
-thiserror = "2.0"
-dirs = "6.0"
-colored = "3.0"
-console = "0.16"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-url = "2.5"
-tempfile = "3.20"
-tokio-test = "0.4"
-base64 = "0.22"
-regex = "1.11"
-octocrab = "0.44.1"
-mockall = "0.13"
-cargo-tarpaulin = "0.32"
-serde_yaml = "0.9"
-uuid = { version = "1.18", features = ["v4", "serde"] }
-futures = "0.3"
+[dependencies]
+crossterm = "0.28"
+unicode-width = "0.2"
